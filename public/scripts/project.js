@@ -12,8 +12,7 @@
        6. Complete a checkout with full form validation
 
    Files used:
-     public/hotels.json  – 12 hotel locations
-     public/rooms.json   – 36 rooms (3 per hotel)
+     hotels.json / rooms.json  – in the same folder as index.html
      scripts/project.js  – this file
 ============================================================ */
 
@@ -162,7 +161,7 @@ function getUserLocation() {
 
 /**
  * loadData()
- * Fetches hotels.json and rooms.json from the public/ folder
+ * Fetches hotels.json and rooms.json (served alongside index.html)
  * using the modern Fetch API. Uses async/await and try/catch/finally
  * for clean error handling.
  */
@@ -172,16 +171,16 @@ async function loadData() {
 
         // Fetch both files at the same time using Promise.all for efficiency
         const [hotelsRes, roomsRes] = await Promise.all([
-            fetch('public/hotels.json'),
-            fetch('public/rooms.json')
+            fetch('hotels.json'),
+            fetch('rooms.json')
         ]);
 
         // Check HTTP status of each response and throw a meaningful error if needed
         if (!hotelsRes.ok) {
-            throw new Error('Could not load hotels.json. Make sure the file is in the public/ folder.');
+            throw new Error('Could not load hotels.json.');
         }
         if (!roomsRes.ok) {
-            throw new Error('Could not load rooms.json. Make sure the file is in the public/ folder.');
+            throw new Error('Could not load rooms.json.');
         }
 
         // Parse the JSON body from each response
