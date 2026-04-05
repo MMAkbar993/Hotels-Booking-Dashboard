@@ -1,0 +1,134 @@
+[
+  {
+    "id": 1,
+    "name": "Harbour Grand Victoria",
+    "city": "Victoria",
+    "country": "Canada",
+    "lat": 48.4284,
+    "lng": -123.3656,
+    "rating": 4.7,
+    "description": "Oceanfront hotel with full spa access and stunning harbour views. Steps from the inner harbour and downtown Victoria.",
+    "image": "https://picsum.photos/seed/hotel1/800/500"
+  },
+  {
+    "id": 2,
+    "name": "Skyline Toronto Hotel",
+    "city": "Toronto",
+    "country": "Canada",
+    "lat": 43.6532,
+    "lng": -79.3832,
+    "rating": 4.5,
+    "description": "A downtown hotel close to the CN Tower, shopping, and entertainment. Enjoy rooftop views of the Toronto skyline.",
+    "image": "https://picsum.photos/seed/hotel2/800/500"
+  },
+  {
+    "id": 3,
+    "name": "Pacific Rim Vancouver",
+    "city": "Vancouver",
+    "country": "Canada",
+    "lat": 49.2827,
+    "lng": -123.1207,
+    "rating": 4.6,
+    "description": "Modern hotel offering breathtaking mountain and ocean views. Located in the heart of downtown Vancouver.",
+    "image": "https://picsum.photos/seed/hotel3/800/500"
+  },
+  {
+    "id": 4,
+    "name": "Manhattan Grand New York",
+    "city": "New York",
+    "country": "USA",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "rating": 4.8,
+    "description": "Luxury hotel in the heart of Midtown Manhattan, minutes from Times Square with iconic skyline views.",
+    "image": "https://picsum.photos/seed/hotel4/800/500"
+  },
+  {
+    "id": 5,
+    "name": "Sunset Boulevard Hotel",
+    "city": "Los Angeles",
+    "country": "USA",
+    "lat": 34.0522,
+    "lng": -118.2437,
+    "rating": 4.4,
+    "description": "Stylish hotel near Hollywood with a rooftop pool, outdoor lounge, and sweeping city views at golden hour.",
+    "image": "https://picsum.photos/seed/hotel5/800/500"
+  },
+  {
+    "id": 6,
+    "name": "The Westminster London",
+    "city": "London",
+    "country": "UK",
+    "lat": 51.5074,
+    "lng": -0.1278,
+    "rating": 4.6,
+    "description": "Classic British elegance steps from Big Ben, Westminster Abbey, and the River Thames.",
+    "image": "https://picsum.photos/seed/hotel6/800/500"
+  },
+  {
+    "id": 7,
+    "name": "Eiffel Prestige Paris",
+    "city": "Paris",
+    "country": "France",
+    "lat": 48.8566,
+    "lng": 2.3522,
+    "rating": 4.9,
+    "description": "Romantic Parisian hotel steps from the Eiffel Tower. Enjoy fine dining, world-class service, and Seine River views.",
+    "image": "https://picsum.photos/seed/hotel7/800/500"
+  },
+  {
+    "id": 8,
+    "name": "Sakura Grand Tokyo",
+    "city": "Tokyo",
+    "country": "Japan",
+    "lat": 35.6762,
+    "lng": 139.6503,
+    "rating": 4.7,
+    "description": "Sleek and modern hotel in Shinjuku with traditional Japanese design touches and city panorama views.",
+    "image": "https://picsum.photos/seed/hotel8/800/500"
+  },
+  {
+    "id": 9,
+    "name": "Harbour Bridge Sydney",
+    "city": "Sydney",
+    "country": "Australia",
+    "lat": -33.8688,
+    "lng": 151.2093,
+    "rating": 4.5,
+    "description": "Contemporary hotel with direct views of the iconic Sydney Harbour Bridge and Opera House.",
+    "image": "https://picsum.photos/seed/hotel9/800/500"
+  },
+  {
+    "id": 10,
+    "name": "Desert Pearl Dubai",
+    "city": "Dubai",
+    "country": "UAE",
+    "lat": 25.2048,
+    "lng": 55.2708,
+    "rating": 5.0,
+    "description": "Ultra-luxury 5-star resort with an infinity pool, world-class spa, and views of the Burj Khalifa.",
+    "image": "https://picsum.photos/seed/hotel10/800/500"
+  },
+  {
+    "id": 11,
+    "name": "Colosseum Suites Rome",
+    "city": "Rome",
+    "country": "Italy",
+    "lat": 41.9028,
+    "lng": 12.4964,
+    "rating": 4.6,
+    "description": "Boutique hotel near the Colosseum blending ancient Roman charm with modern luxury amenities.",
+    "image": "https://picsum.photos/seed/hotel11/800/500"
+  },
+  {
+    "id": 12,
+    "name": "Casa Catalunya Barcelona",
+    "city": "Barcelona",
+    "country": "Spain",
+    "lat": 41.3851,
+    "lng": 2.1734,
+    "rating": 4.7,
+    "description": "Vibrant hotel in the Gothic Quarter featuring a rooftop terrace, tapas bar, and views of Sagrada Familia.",
+    "image": "https://picsum.photos/seed/hotel12/800/500"
+  }
+]

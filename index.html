@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Stay Hotels – Booking Dashboard</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Font Awesome (icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ===================================================
+           CUSTOM STYLES
+        =================================================== */
+
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        /* Navbar brand */
+        .navbar-brand {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* ---- Map ---- */
+        #map {
+            height: 460px;
+            width: 100%;
+            z-index: 1;
+        }
+
+        /* ---- Sections hidden until a hotel is selected ---- */
+        #hotel-section,
+        #rooms-section {
+            display: none;
+        }
+
+        /* ---- Room card hover effect ---- */
+        .room-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            cursor: default;
+        }
+
+        .room-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        /* Consistent room image height */
+        .room-card .card-img-top {
+            height: 200px;
+            object-fit: cover;
+        }
+
+        /* ---- Leaflet custom marker: transparent background ---- */
+        .hotel-marker-icon {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* ---- Weather widget gradient background ---- */
+        #weather-widget {
+            background: linear-gradient(135deg, #4e73df 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+        }
+
+        /* Hotel info: left accent border */
+        #hotel-info-card {
+            border-left: 5px solid #0d6efd;
+        }
+
+        /* ---- Checkout confirmation (hidden until booking is complete) ---- */
+        #confirmation-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAVBAR
+============================================================ -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
+    <div class="container-fluid px-3">
+
+        <!-- Brand -->
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-hotel me-2 text-warning"></i>Grand Stay Hotels
+        </a>
+
+        <!-- Mobile toggle -->
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navContent"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Nav links -->
+        <div class="collapse navbar-collapse" id="navContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="#map-section">
+                        <i class="fas fa-map me-1"></i>Map
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#rooms-section">
+                        <i class="fas fa-door-open me-1"></i>Rooms
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Booking Cart button with badge showing item count -->
+            <button class="btn btn-outline-warning position-relative"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#cartOffcanvas"
+                    aria-label="View cart">
+                <i class="fas fa-shopping-cart me-1"></i>Booking Cart
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                      id="cart-count">0</span>
+            </button>
+        </div>
+
+    </div>
+</nav>
+
+
+<!-- ============================================================
+     HERO BANNER
+============================================================ -->
+<div class="bg-dark text-white py-4 border-bottom border-secondary">
+    <div class="container text-center">
+        <h1 class="display-6 fw-bold mb-1">
+            <i class="fas fa-globe-americas me-2 text-warning"></i>Find Your Perfect Stay
+        </h1>
+        <p class="lead text-secondary mb-0">
+            Click any hotel marker on the map to explore rooms and start booking.
+        </p>
+    </div>
+</div>
+
+
+<!-- ============================================================
+     MAP SECTION
+============================================================ -->
+<section id="map-section">
+    <div id="map"></div>
+</section>
+
+
+<!-- ============================================================
+     MAIN CONTENT
+============================================================ -->
+<div class="container my-4">
+
+    <!-- Welcome message shown when no hotel has been selected yet -->
+    <div id="welcome-section" class="text-center py-5">
+        <i class="fas fa-map-marker-alt fa-3x text-primary mb-3"></i>
+        <h3 class="fw-bold">Welcome to Grand Stay Hotels</h3>
+        <p class="text-muted fs-5">
+            We have 12 hotel locations worldwide.<br>
+            Click a <span class="text-warning fw-semibold"><i class="fas fa-hotel"></i> hotel marker</span>
+            on the map above to view available rooms and begin booking.
+        </p>
+    </div>
+
+
+    <!-- ============================================================
+         HOTEL INFO + WEATHER (hidden until a hotel is clicked)
+    ============================================================ -->
+    <div id="hotel-section">
+
+        <div class="row g-4 mb-4">
+
+            <!-- Hotel details card -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm h-100" id="hotel-info-card">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                            <h3 class="card-title mb-0 fw-bold" id="hotel-name">Hotel Name</h3>
+                            <span class="badge bg-warning text-dark fs-6">
+                                <i class="fas fa-star me-1"></i><span id="hotel-rating-value">4.5</span>
+                            </span>
+                        </div>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                            <span id="hotel-location">City, Country</span>
+                        </p>
+                        <p class="card-text fs-5" id="hotel-description">
+                            Hotel description will appear here.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weather widget card -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm h-100" id="weather-widget">
+                    <div class="card-body text-center py-4">
+                        <h5 class="card-title fw-bold">
+                            <i class="fas fa-cloud-sun me-2"></i>Local Weather
+                        </h5>
+                        <!-- Weather content is injected here by JavaScript -->
+                        <div id="weather-content">
+                            <div class="spinner-border text-light mt-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 small">Loading weather...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end hotel info row -->
+
+        <!-- Weather fee alert (shown only when rain/snow is detected) -->
+        <div class="alert alert-warning d-none mb-4" id="weather-fee-alert" role="alert">
+            <i class="fas fa-cloud-rain me-2"></i>
+            <strong>Weather Advisory:</strong>
+            Due to current weather conditions at this location, a <strong>$20 weather service fee</strong>
+            will be added per room per night.
+        </div>
+
+    </div><!-- end hotel-section -->
+
+
+    <!-- ============================================================
+         ROOM CATALOG (hidden until a hotel is clicked)
+    ============================================================ -->
+    <div id="rooms-section">
+
+        <!-- Section heading + count -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold mb-0">
+                <i class="fas fa-door-open me-2 text-primary"></i>Available Rooms
+            </h4>
+            <span class="text-muted small" id="rooms-count-label"></span>
+        </div>
+
+        <!-- Filter and sort controls -->
+        <div class="row g-2 mb-4" id="filter-controls">
+
+            <!-- Filter by room type -->
+            <div class="col-sm-6 col-md-4">
+                <select class="form-select" id="filter-type" aria-label="Filter by room type">
+                    <option value="all">All Room Types</option>
+                    <option value="Suite">Suite</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Standard">Standard</option>
+                </select>
+            </div>
+
+            <!-- Sort order -->
+            <div class="col-sm-6 col-md-4">
+                <select class="form-select" id="sort-by" aria-label="Sort rooms">
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="rating">Top Rated</option>
+                    <option value="guests">Max Guests</option>
+                </select>
+            </div>
+
+            <!-- Available only checkbox -->
+            <div class="col-md-4 d-flex align-items-center">
+                <div class="form-check ms-1">
+                    <input class="form-check-input" type="checkbox" id="filter-available">
+                    <label class="form-check-label" for="filter-available">
+                        Show Available Only
+                    </label>
+                </div>
+            </div>
+
+        </div><!-- end filter controls -->
+
+        <!-- Room cards are injected here by JavaScript -->
+        <div class="row g-4" id="rooms-container"></div>
+
+        <!-- Shown when no rooms match the active filters -->
+        <div id="no-rooms-msg" class="text-center py-4 d-none">
+            <i class="fas fa-search fa-2x text-muted mb-3"></i>
+            <p class="text-muted fs-5">No rooms match your current filters. Try adjusting them.</p>
+        </div>
+
+    </div><!-- end rooms-section -->
+
+</div><!-- end container -->
+
+
+<!-- ============================================================
+     OFFCANVAS: BOOKING CART
+============================================================ -->
+<div class="offcanvas offcanvas-end"
+     tabindex="-1"
+     id="cartOffcanvas"
+     style="width: 380px; max-width: 95vw;">
+
+    <div class="offcanvas-header bg-dark text-white">
+        <h5 class="offcanvas-title fw-bold">
+            <i class="fas fa-shopping-cart me-2 text-warning"></i>Booking Cart
+        </h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="offcanvas"
+                aria-label="Close cart"></button>
+    </div>
+
+    <div class="offcanvas-body d-flex flex-column p-3">
+
+        <!-- List of cart items (filled by JS) -->
+        <div id="cart-items" class="flex-grow-1">
+            <p class="text-muted text-center mt-4" id="empty-cart-msg">
+                <i class="fas fa-bed fa-2x mb-2 d-block text-secondary"></i>
+                Your cart is empty.<br>
+                Browse rooms and click <strong>Book Room</strong> to add items.
+            </p>
+        </div>
+
+        <!-- Cart footer: subtotal + action buttons (hidden when cart is empty) -->
+        <div id="cart-footer" class="border-top pt-3 d-none">
+            <div class="d-flex justify-content-between mb-1 fw-semibold">
+                <span>Subtotal (per night):</span>
+                <span id="cart-subtotal" class="text-primary">$0.00</span>
+            </div>
+            <p class="text-muted small mb-3">
+                Final total (with taxes) is calculated at checkout.
+            </p>
+            <div class="d-grid gap-2">
+                <button class="btn btn-warning fw-bold"
+                        id="checkout-btn"
+                        data-bs-dismiss="offcanvas"
+                        data-bs-toggle="modal"
+                        data-bs-target="#checkoutModal">
+                    <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                </button>
+                <button class="btn btn-outline-danger btn-sm" id="clear-cart-btn">
+                    <i class="fas fa-trash me-2"></i>Empty Cart
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ============================================================
+     MODAL: CHECKOUT
+============================================================ -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- Modal header -->
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold" id="checkoutModalLabel">
+                    <i class="fas fa-clipboard-check me-2 text-warning"></i>Complete Your Booking
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body">
+
+                <!-- ---- BOOKING FORM SECTION ---- -->
+                <div id="booking-form-section">
+                    <div class="row g-4">
+
+                        <!-- Left column: guest info form -->
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3 text-primary">
+                                <i class="fas fa-user me-2"></i>Guest Information
+                            </h6>
+
+                            <!-- novalidate prevents browser's default bubbles; we handle it ourselves -->
+                            <form id="checkout-form" novalidate>
+
+                                <!-- Full Name -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold" for="field-name">Full Name *</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="field-name"
+                                           placeholder="e.g. Jane Smith">
+                                    <div class="invalid-feedback" id="err-name"></div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold" for="field-email">Email Address *</label>
+                                    <input type="email"
+                                           class="form-control"
+                                           id="field-email"
+                                           placeholder="e.g. jane@example.com">
+                                    <div class="invalid-feedback" id="err-email"></div>
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold" for="field-phone">Phone Number *</label>
+                                    <input type="tel"
+                                           class="form-control"
+                                           id="field-phone"
+                                           placeholder="e.g. 555-123-4567">
+                                    <div class="invalid-feedback" id="err-phone"></div>
+                                </div>
+
+                                <!-- Street Address -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold" for="field-address">Street Address *</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="field-address"
+                                           placeholder="e.g. 123 Main Street">
+                                    <div class="invalid-feedback" id="err-address"></div>
+                                </div>
+
+                                <!-- City and Province/State -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-7">
+                                        <label class="form-label fw-semibold" for="field-city">City *</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               id="field-city"
+                                               placeholder="e.g. Vancouver">
+                                        <div class="invalid-feedback" id="err-city"></div>
+                                    </div>
+                                    <div class="col-5">
+                                        <label class="form-label fw-semibold" for="field-province">Province / State *</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               id="field-province"
+                                               placeholder="e.g. BC">
+                                        <div class="invalid-feedback" id="err-province"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Postal Code -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold" for="field-postal">Postal / Zip Code *</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="field-postal"
+                                           placeholder="e.g. V5K 1A1">
+                                    <div class="invalid-feedback" id="err-postal"></div>
+                                </div>
+
+                                <!-- Nights and Guests (side by side) -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold" for="field-nights">Nights *</label>
+                                        <input type="number"
+                                               class="form-control"
+                                               id="field-nights"
+                                               min="1" max="30"
+                                               value="1">
+                                        <div class="invalid-feedback" id="err-nights"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold" for="field-guests">Guests *</label>
+                                        <input type="number"
+                                               class="form-control"
+                                               id="field-guests"
+                                               min="1" max="10"
+                                               value="1">
+                                        <div class="invalid-feedback" id="err-guests"></div>
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div><!-- end left column -->
+
+                        <!-- Right column: live order summary -->
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3 text-primary">
+                                <i class="fas fa-receipt me-2"></i>Order Summary
+                            </h6>
+                            <!-- Summary is rebuilt by JS whenever nights/guests change -->
+                            <div id="order-summary" class="bg-light rounded p-3 small">
+                                <p class="text-muted">Add rooms to your cart to see pricing here.</p>
+                            </div>
+                        </div>
+
+                    </div><!-- end row -->
+                </div><!-- end booking-form-section -->
+
+
+                <!-- ---- CONFIRMATION SECTION (shown after successful booking) ---- -->
+                <div id="confirmation-section" class="text-center py-4">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h4 class="text-success fw-bold">Booking Confirmed!</h4>
+                    <p class="text-muted">Thank you for choosing Grand Stay Hotels. A confirmation has been sent to your email.</p>
+                    <div id="confirmation-details" class="bg-light rounded p-3 text-start mt-3 small">
+                        <!-- Filled by JS after checkout -->
+                    </div>
+                </div>
+
+            </div><!-- end modal-body -->
+
+            <!-- Modal footer with action buttons -->
+            <div class="modal-footer" id="checkout-modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-warning fw-bold" id="confirm-booking-btn">
+                    <i class="fas fa-check me-2"></i>Confirm Booking
+                </button>
+            </div>
+
+        </div><!-- end modal-content -->
+    </div>
+</div>
+
+
+<!-- ============================================================
+     SCRIPTS
+     Load order matters: jQuery first, then Bootstrap, then Leaflet, then our code
+============================================================ -->
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<!-- Bootstrap 5 Bundle (includes Popper.js) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Our project script -->
+<script src="scripts/project.js"></script>
+
+</body>
+</html>
